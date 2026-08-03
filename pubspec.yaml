@@ -16,7 +16,7 @@ dependencies:
 
   # Audio
   record: ^6.1.1
-  flutter_audio_capture: ^1.1.8
+ 
 
   # Networking
   http: ^1.2.2
