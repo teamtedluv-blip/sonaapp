@@ -1,56 +1,61 @@
 cmake_minimum_required(VERSION 3.14)
 
-# Fix Visual Studio coroutine deprecation error
+# Fix Visual Studio experimental coroutine deprecation error
 add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
 
 project(runner LANGUAGES CXX)
 
-# The name of the executable created for the application.
 set(BINARY_NAME "sona")
 
-# Explicitly opt in to modern CMake behaviors.
 cmake_policy(VERSION 3.14...3.25)
 
-# Define build configuration.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/runner")
+# Configure build options.
+get_property(BUILD_OPTIONS GLOBAL PROPERTY BUILDSYSTEM_TARGETS)
 
-# Configure the Flutter engine.
+# The directory where the Flutter engine is located.
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 
+# Add Flutter generated CMake.
 add_subdirectory(${FLUTTER_MANAGED_DIR})
 
-# Application build
+# Runner executable
 add_executable(${BINARY_NAME}
   "flutter_window.cpp"
   "main.cpp"
   "utils.cpp"
   "win32_window.cpp"
-  "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
+  "Runner.rc"
+  "runner.exe.manifest"
 )
 
-# Apply standard Flutter Windows settings
+# Apply Flutter Windows settings
 apply_standard_settings(${BINARY_NAME})
 
-# Add the runner directory
+# Include runner files
 target_include_directories(${BINARY_NAME} PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-# Flutter library linking
-target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
+# Link Flutter
+target_link_libraries(${BINARY_NAME} PRIVATE
+  flutter
+  flutter_wrapper_app
+)
 
-# Ensure Flutter build happens before runner
-add_dependencies(${BINARY_NAME} flutter_assemble)
+# Make sure Flutter is built first
+add_dependencies(${BINARY_NAME}
+  flutter_assemble
+)
 
-# Windows application properties
+# Windows executable
 set_target_properties(${BINARY_NAME} PROPERTIES
   WIN32_EXECUTABLE TRUE
 )
 
-# C++ standard
+# Use C++17
 target_compile_features(${BINARY_NAME} PRIVATE cxx_std_17)
 
-# Add required Windows libraries
+# Windows system libraries
 target_link_libraries(${BINARY_NAME} PRIVATE
-  shlwapi
+  dwmapi
 )
